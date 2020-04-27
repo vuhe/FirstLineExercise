@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity() {
             refreshCounter()
         }
         refreshCounter()
+        lifecycle.addObserver(MyObserver())
     }
 
     override fun onPause() {
