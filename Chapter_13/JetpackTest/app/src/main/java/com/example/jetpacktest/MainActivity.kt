@@ -5,7 +5,9 @@ import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import android.os.Bundle
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.observe
 import androidx.lifecycle.ViewModelProviders
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -17,30 +19,34 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        lifecycle.addObserver(MyObserver())
         sp = getPreferences(Context.MODE_PRIVATE)
         val countReserved = sp.getInt("count_reserved", 0)
         viewModel = ViewModelProviders.of(this, MainViewModelFactory(countReserved))
             .get(MainViewModel::class.java)
         plusOneBtn.setOnClickListener {
-            viewModel.counter++
-            refreshCounter()
+            viewModel.plusOne()
         }
         clearBtn.setOnClickListener {
-            viewModel.counter = 0
-            refreshCounter()
+            viewModel.clear()
         }
-        refreshCounter()
-        lifecycle.addObserver(MyObserver())
+        viewModel.counter.observe(this) { count ->
+            infoText.text = count.toString()
+        }
+        getUserBtn.setOnClickListener {
+            val userId = (0..10000).random().toString()
+            viewModel.getUser(userId)
+        }
+        viewModel.user.observe(this) { user ->
+            infoText.text = user.firstName
+        }
     }
 
     override fun onPause() {
         super.onPause()
         sp.edit {
-            putInt("count_reserved", viewModel.counter)
+            putInt("count_reserved", viewModel.counter.value ?: 0)
         }
     }
 
-    private fun refreshCounter() {
-        infoText.text = viewModel.counter.toString()
-    }
 }
